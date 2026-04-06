@@ -1,13 +1,66 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const HabitContext = createContext(null);
 
-const initialHabits = [
+// Storage key for localStorage persistence
+const STORAGE_KEY = 'consistify_habits';
+
+// Default habits used when no saved data exists
+const defaultHabits = [
   { id: 1, name: 'Morning Meditation', goal: '10 min', frequency: 'daily', time: 'morning', streak: 12, completions: generateCompletions(12), color: '#E8553A' },
   { id: 2, name: 'Read 20 Pages', goal: '20 pages', frequency: 'daily', time: 'evening', streak: 7, completions: generateCompletions(7), color: '#2F80ED' },
   { id: 3, name: 'Exercise', goal: '30 min', frequency: 'weekdays', time: 'morning', streak: 5, completions: generateCompletions(5), color: '#27AE60' },
   { id: 4, name: 'Journal', goal: '1 entry', frequency: 'daily', time: 'evening', streak: 3, completions: generateCompletions(3), color: '#F5A623' },
 ];
+
+/**
+ * Safely migrate old habit formats (e.g. plain strings) into proper objects.
+ * Ensures every habit has: id, name, createdAt, completedDates, completions, streak, color.
+ */
+function migrateHabit(habit, index) {
+  // If habit was stored as a plain string, convert to object
+  if (typeof habit === 'string') {
+    return {
+      id: index + 1,
+      name: habit,
+      goal: '',
+      frequency: 'daily',
+      time: 'morning',
+      streak: 0,
+      completions: [],
+      completedDates: [],
+      createdAt: new Date().toISOString(),
+      color: ['#E8553A', '#2F80ED', '#27AE60', '#F5A623'][index % 4],
+    };
+  }
+  // Ensure required fields exist on existing objects
+  return {
+    ...habit,
+    completions: habit.completions || [],
+    completedDates: habit.completedDates || [],
+    createdAt: habit.createdAt || new Date().toISOString(),
+    streak: habit.streak || 0,
+  };
+}
+
+/**
+ * Load habits from localStorage with safe migration.
+ * Falls back to default habits if nothing is saved.
+ */
+function loadHabits() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(migrateHabit);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load habits from localStorage:', e);
+  }
+  return defaultHabits;
+}
 
 function generateCompletions(streak) {
   const completions = [];
