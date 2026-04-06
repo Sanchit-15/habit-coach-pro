@@ -82,8 +82,20 @@ function generateCompletions(streak) {
 }
 
 export function HabitProvider({ children }) {
-  const [habits, setHabits] = useState(initialHabits);
-  const [nextId, setNextId] = useState(5);
+  const [habits, setHabits] = useState(loadHabits);
+  const [nextId, setNextId] = useState(() => {
+    const loaded = loadHabits();
+    return loaded.length > 0 ? Math.max(...loaded.map(h => h.id)) + 1 : 1;
+  });
+
+  // Persist habits to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+    } catch (e) {
+      console.warn('Failed to save habits to localStorage:', e);
+    }
+  }, [habits]);
 
   const addHabit = (habit) => {
     const colors = ['#E8553A', '#2F80ED', '#27AE60', '#F5A623', '#9B59B6', '#1ABC9C'];
