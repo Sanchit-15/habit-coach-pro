@@ -2,6 +2,39 @@
   animation: fadeIn 0.4s ease;
 }
 
+/* Summary stats row above insights */
+.insights-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.summary-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+  transition: box-shadow var(--transition-fast);
+}
+
+.summary-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.summary-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
 .insights-grid {
   display: flex;
   flex-direction: column;
