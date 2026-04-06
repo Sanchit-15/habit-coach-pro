@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  // Search filter state for filtering habits by name
+  const [searchQuery, setSearchQuery] = useState('');
 
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[Math.floor(Date.now() / 86400000) % quotes.length];
@@ -58,11 +60,27 @@ export default function Dashboard() {
     return { day, completed, total: habits.length };
   });
 
+  {/* Filter habits by search query (simple case-insensitive string match) */}
+  const filteredHabits = habits.filter(h =>
+    h.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="dashboard-page">
       <div className="page-header">
         <h1>Dashboard</h1>
         <p>Welcome back! Here's your habit overview for today.</p>
+      </div>
+
+      {/* Search bar for filtering habits by name */}
+      <div className="search-bar-wrapper">
+        <input
+          className="form-input search-input"
+          type="text"
+          placeholder="🔍 Search habits..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="stats-grid">
@@ -94,22 +112,31 @@ export default function Dashboard() {
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
             </div>
             <div className="today-habits-list">
-              {habits.map(habit => {
-                const status = getTodayStatus(habit);
-                return (
-                  <div className="today-habit" key={habit.id}>
-                    <div className="habit-color-dot" style={{ background: habit.color }} />
-                    <div className="habit-info">
-                      <div className="habit-name">{habit.name}</div>
-                      <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+              {filteredHabits.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-muted)' }}>
+                  No habits match your search.
+                </div>
+              ) : (
+                filteredHabits.map(habit => {
+                  const status = getTodayStatus(habit);
+                  return (
+                    <div
+                      className={`today-habit ${status === 'done' ? 'habit-completed-today' : ''}`}
+                      key={habit.id}
+                    >
+                      <div className="habit-color-dot" style={{ background: habit.color }} />
+                      <div className="habit-info">
+                        <div className="habit-name">{habit.name}</div>
+                        <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+                      </div>
+                      <div className="habit-actions">
+                        <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
+                        <button className={`check-btn ${status === 'missed' ? 'missed' : ''}`} onClick={() => handleMiss(habit.id)} title="Mark missed">✗</button>
+                      </div>
                     </div>
-                    <div className="habit-actions">
-                      <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
-                      <button className={`check-btn ${status === 'missed' ? 'missed' : ''}`} onClick={() => handleMiss(habit.id)} title="Mark missed">✗</button>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 

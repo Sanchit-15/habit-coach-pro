@@ -266,6 +266,35 @@
   margin-top: var(--space-md);
 }
 
+/* Search bar */
+.search-bar-wrapper {
+  margin-bottom: var(--space-lg);
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  background: var(--card);
+  color: var(--text);
+  transition: border-color var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+/* Highlight habits completed today with a green background */
+.habit-completed-today {
+  background: var(--success-bg) !important;
+  border-left: 3px solid var(--success);
+}
+
 @media (max-width: 768px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }

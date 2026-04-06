@@ -59,12 +59,35 @@ export default function Insights() {
     },
   ];
 
+  // Summary stats for the insights page
+  const totalHabits = habits.length;
+  const totalCompletions = habits.reduce((sum, h) => sum + h.completions.filter(c => c.status === 'done').length, 0);
+
   return (
     <div className="insights-page">
       <div className="page-header">
         <h1>Insights</h1>
         <p>AI-powered observations to help you build better habits.</p>
       </div>
+
+      {/* Summary stats cards */}
+      <div className="insights-summary">
+        <div className="summary-card">
+          <div className="summary-value">{totalHabits}</div>
+          <div className="summary-label">Total Habits</div>
+        </div>
+        <div className="summary-card">
+          <div className="summary-value">{totalCompletions}</div>
+          <div className="summary-label">Total Completions</div>
+        </div>
+        {habits.map(h => (
+          <div className="summary-card" key={h.id}>
+            <div className="summary-value">🔥 {h.streak}</div>
+            <div className="summary-label">{h.name}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="insights-grid">
         {insights.map((insight, i) => (
           <div className="insight-card" key={i}>
