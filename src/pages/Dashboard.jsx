@@ -60,11 +60,27 @@ export default function Dashboard() {
     return { day, completed, total: habits.length };
   });
 
+  {/* Filter habits by search query (simple case-insensitive string match) */}
+  const filteredHabits = habits.filter(h =>
+    h.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="dashboard-page">
       <div className="page-header">
         <h1>Dashboard</h1>
         <p>Welcome back! Here's your habit overview for today.</p>
+      </div>
+
+      {/* Search bar for filtering habits by name */}
+      <div className="search-bar-wrapper">
+        <input
+          className="form-input search-input"
+          type="text"
+          placeholder="🔍 Search habits..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="stats-grid">
