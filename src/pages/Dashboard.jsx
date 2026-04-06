@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  // Search filter state for filtering habits by name
+  const [searchQuery, setSearchQuery] = useState('');
 
   const today = new Date().toISOString().split('T')[0];
   const quote = quotes[Math.floor(Date.now() / 86400000) % quotes.length];
