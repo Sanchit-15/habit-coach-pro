@@ -112,22 +112,31 @@ export default function Dashboard() {
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
             </div>
             <div className="today-habits-list">
-              {habits.map(habit => {
-                const status = getTodayStatus(habit);
-                return (
-                  <div className="today-habit" key={habit.id}>
-                    <div className="habit-color-dot" style={{ background: habit.color }} />
-                    <div className="habit-info">
-                      <div className="habit-name">{habit.name}</div>
-                      <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+              {filteredHabits.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-muted)' }}>
+                  No habits match your search.
+                </div>
+              ) : (
+                filteredHabits.map(habit => {
+                  const status = getTodayStatus(habit);
+                  return (
+                    <div
+                      className={`today-habit ${status === 'done' ? 'habit-completed-today' : ''}`}
+                      key={habit.id}
+                    >
+                      <div className="habit-color-dot" style={{ background: habit.color }} />
+                      <div className="habit-info">
+                        <div className="habit-name">{habit.name}</div>
+                        <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+                      </div>
+                      <div className="habit-actions">
+                        <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
+                        <button className={`check-btn ${status === 'missed' ? 'missed' : ''}`} onClick={() => handleMiss(habit.id)} title="Mark missed">✗</button>
+                      </div>
                     </div>
-                    <div className="habit-actions">
-                      <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
-                      <button className={`check-btn ${status === 'missed' ? 'missed' : ''}`} onClick={() => handleMiss(habit.id)} title="Mark missed">✗</button>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
