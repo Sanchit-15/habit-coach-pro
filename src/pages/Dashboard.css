@@ -266,13 +266,17 @@
   margin-top: var(--space-md);
 }
 
-/* Search bar */
+/* Search + filter bar */
 .search-bar-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
 .search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 220px;
   max-width: 400px;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
@@ -283,10 +287,19 @@
   transition: border-color var(--transition-fast);
 }
 
+.filter-select {
+  min-width: 160px;
+}
+
 .search-input:focus {
   border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+/* Empty state on dashboard */
+.empty-state-card {
+  margin-bottom: var(--space-lg);
 }
 
 /* Highlight habits completed today with a green background */
