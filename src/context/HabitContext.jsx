@@ -7,11 +7,28 @@ const STORAGE_KEY = 'consistify_habits';
 
 // Default habits used when no saved data exists
 const defaultHabits = [
-  { id: 1, name: 'Morning Meditation', goal: '10 min', frequency: 'daily', time: 'morning', streak: 12, completions: generateCompletions(12), color: '#E8553A' },
-  { id: 2, name: 'Read 20 Pages', goal: '20 pages', frequency: 'daily', time: 'evening', streak: 7, completions: generateCompletions(7), color: '#2F80ED' },
-  { id: 3, name: 'Exercise', goal: '30 min', frequency: 'weekdays', time: 'morning', streak: 5, completions: generateCompletions(5), color: '#27AE60' },
-  { id: 4, name: 'Journal', goal: '1 entry', frequency: 'daily', time: 'evening', streak: 3, completions: generateCompletions(3), color: '#F5A623' },
+  { id: 1, name: 'Morning Meditation', goal: '10 min', frequency: 'daily', customDays: [], time: 'morning', category: 'Mindfulness', priority: 'high', streak: 12, completions: generateCompletions(12), color: '#E8553A' },
+  { id: 2, name: 'Read 20 Pages', goal: '20 pages', frequency: 'daily', customDays: [], time: 'evening', category: 'Study', priority: 'medium', streak: 7, completions: generateCompletions(7), color: '#2F80ED' },
+  { id: 3, name: 'Exercise', goal: '30 min', frequency: 'weekdays', customDays: [], time: 'morning', category: 'Fitness', priority: 'high', streak: 5, completions: generateCompletions(5), color: '#27AE60' },
+  { id: 4, name: 'Journal', goal: '1 entry', frequency: 'daily', customDays: [], time: 'evening', category: 'Personal', priority: 'low', streak: 3, completions: generateCompletions(3), color: '#F5A623' },
 ];
+
+// Available categories and priorities (used by forms and filters)
+export const CATEGORIES = ['Health', 'Study', 'Fitness', 'Mindfulness', 'Personal', 'Productivity'];
+export const PRIORITIES = ['high', 'medium', 'low'];
+export const CATEGORY_COLORS = {
+  Health: '#27AE60',
+  Study: '#2F80ED',
+  Fitness: '#E8553A',
+  Mindfulness: '#9B59B6',
+  Personal: '#F5A623',
+  Productivity: '#1ABC9C',
+};
+export const PRIORITY_COLORS = {
+  high: '#EB5757',
+  medium: '#F5A623',
+  low: '#27AE60',
+};
 
 /**
  * Safely migrate old habit formats (e.g. plain strings) into proper objects.
@@ -40,6 +57,10 @@ function migrateHabit(habit, index) {
     completedDates: habit.completedDates || [],
     createdAt: habit.createdAt || new Date().toISOString(),
     streak: habit.streak || 0,
+    // New fields with safe defaults so old data keeps working
+    category: habit.category || 'Personal',
+    priority: habit.priority || 'medium',
+    customDays: habit.customDays || [],
   };
 }
 
