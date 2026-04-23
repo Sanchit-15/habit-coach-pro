@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useHabits } from '../context/HabitContext.jsx';
+import { Link } from 'react-router-dom';
+import { useHabits, CATEGORIES, PRIORITIES, CATEGORY_COLORS, PRIORITY_COLORS } from '../context/HabitContext.jsx';
 import './Dashboard.css';
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -60,10 +61,13 @@ export default function Dashboard() {
     return { day, completed, total: habits.length };
   });
 
-  {/* Filter habits by search query (simple case-insensitive string match) */}
-  const filteredHabits = habits.filter(h =>
-    h.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  {/* Filter habits by search query, category, and priority */}
+  const filteredHabits = habits.filter(h => {
+    const matchesName = h.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat = !categoryFilter || h.category === categoryFilter;
+    const matchesPri = !priorityFilter || h.priority === priorityFilter;
+    return matchesName && matchesCat && matchesPri;
+  });
 
   return (
     <div className="dashboard-page">
@@ -72,16 +76,40 @@ export default function Dashboard() {
         <p>Welcome back! Here's your habit overview for today.</p>
       </div>
 
-      {/* Search bar for filtering habits by name */}
-      <div className="search-bar-wrapper">
-        <input
-          className="form-input search-input"
-          type="text"
-          placeholder="🔍 Search habits..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-      </div>
+      {/* Empty state shown when there are no habits at all */}
+      {habits.length === 0 && (
+        <div className="card empty-state-card">
+          <div className="empty-state">
+            <div className="empty-state-icon">🌱</div>
+            <h3>No habits yet</h3>
+            <p>Start your consistency journey by creating your first habit.</p>
+            <Link to="/habits" className="btn btn-primary" style={{ marginTop: 'var(--space-md)', display: 'inline-block' }}>
+              + Add Your First Habit
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Search + filter bar (hidden when no habits) */}
+      {habits.length > 0 && (
+        <div className="search-bar-wrapper">
+          <input
+            className="form-input search-input"
+            type="text"
+            placeholder="🔍 Search habits..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <select className="form-select filter-select" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+            <option value="">All Categories</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select className="form-select filter-select" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
+            <option value="">All Priorities</option>
+            {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+          </select>
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -126,8 +154,20 @@ export default function Dashboard() {
                     >
                       <div className="habit-color-dot" style={{ background: habit.color }} />
                       <div className="habit-info">
-                        <div className="habit-name">{habit.name}</div>
-                        <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+                        <div className="habit-name">
+                          {habit.name}
+                          <span className="priority-dot" style={{ background: PRIORITY_COLORS[habit.priority] || '#9CA3AF' }} title={`${habit.priority} priority`} />
+                        </div>
+                        <div className="habit-meta">
+                          <span
+                            className="category-badge"
+                            style={{
+                              background: (CATEGORY_COLORS[habit.category] || '#9CA3AF') + '22',
+                              color: CATEGORY_COLORS[habit.category] || '#6B7280',
+                            }}
+                          >{habit.category || 'Personal'}</span>
+                          {' '}{habit.goal} · {habit.time} · 🔥 {habit.streak}
+                        </div>
                       </div>
                       <div className="habit-actions">
                         <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>

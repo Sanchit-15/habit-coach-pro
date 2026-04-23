@@ -62,6 +62,32 @@ export default function Insights() {
   // Summary stats for the insights page
   const totalHabits = habits.length;
   const totalCompletions = habits.reduce((sum, h) => sum + h.completions.filter(c => c.status === 'done').length, 0);
+  const bestStreakAll = Math.max(0, ...habits.map(h => h.streak || 0));
+
+  // Weekly bar chart: completions per day for the past 7 days (plain CSS bars)
+  const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const past7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const count = habits.reduce(
+      (s, h) => s + h.completions.filter(c => c.date === dateStr && c.status === 'done').length,
+      0
+    );
+    past7.push({ label: weekDayLabels[d.getDay()], dateStr, count });
+  }
+  const maxCount = Math.max(1, ...past7.map(d => d.count));
+  const weekTotal = past7.reduce((s, d) => s + d.count, 0);
+
+  // Recent completion history per habit (last 5 done entries)
+  const recentByHabit = habits.map(h => ({
+    habit: h,
+    recent: [...h.completions]
+      .filter(c => c.status === 'done')
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 5),
+  }));
 
   return (
     <div className="insights-page">
@@ -80,13 +106,56 @@ export default function Insights() {
           <div className="summary-value">{totalCompletions}</div>
           <div className="summary-label">Total Completions</div>
         </div>
-        {habits.map(h => (
-          <div className="summary-card" key={h.id}>
-            <div className="summary-value">🔥 {h.streak}</div>
-            <div className="summary-label">{h.name}</div>
-          </div>
-        ))}
+        <div className="summary-card">
+          <div className="summary-value">{weekTotal}</div>
+          <div className="summary-label">Completions This Week</div>
+        </div>
+        <div className="summary-card">
+          <div className="summary-value">🔥 {bestStreakAll}</div>
+          <div className="summary-label">Best Streak</div>
+        </div>
       </div>
+
+      {/* Weekly bar chart - last 7 days, plain CSS bars */}
+      <div className="insight-card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <div className="insight-title" style={{ marginBottom: 'var(--space-md)' }}>📊 Completions — Last 7 Days</div>
+        <div className="week-chart">
+          {past7.map((d, i) => (
+            <div className="week-chart-col" key={i}>
+              <div className="week-chart-count">{d.count}</div>
+              <div
+                className="week-chart-bar"
+                style={{ height: `${(d.count / maxCount) * 140}px` }}
+              />
+              <div className="week-chart-label">{d.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-habit recent completion history */}
+      {habits.length > 0 && (
+        <div className="insight-card" style={{ marginBottom: 'var(--space-lg)' }}>
+          <div className="insight-title" style={{ marginBottom: 'var(--space-md)' }}>📅 Recent Completion History</div>
+          <div className="history-list">
+            {recentByHabit.map(({ habit, recent }) => (
+              <div className="history-row" key={habit.id}>
+                <div className="history-habit">
+                  <span className="habit-color-dot" style={{ background: habit.color, display: 'inline-block', marginRight: 8 }} />
+                  {habit.name} <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>🔥 {habit.streak}</span>
+                </div>
+                <div className="history-dates">
+                  {recent.length === 0
+                    ? <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>No completions yet</span>
+                    : recent.map(c => (
+                        <span className="history-date-chip" key={c.date}>{c.date}</span>
+                      ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="insights-grid">
         {insights.map((insight, i) => (
