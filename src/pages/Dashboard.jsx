@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useHabits } from '../context/HabitContext.jsx';
+import { Link } from 'react-router-dom';
+import { useHabits, CATEGORIES, PRIORITIES, CATEGORY_COLORS, PRIORITY_COLORS } from '../context/HabitContext.jsx';
 import './Dashboard.css';
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
