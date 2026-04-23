@@ -194,3 +194,38 @@
   border-radius: var(--radius-full);
   font-weight: 500;
 }
+
+/* ===== New: export/import controls and mood history ===== */
+
+/* Row holding Export / Import buttons above the summary cards */
+.export-import-row {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+/* Mood history grid — one cell per day */
+.mood-history {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-sm);
+}
+
+.mood-history-cell {
+  background: var(--background);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  text-align: center;
+}
+
+.mood-history-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.mood-history-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: 4px;
+}

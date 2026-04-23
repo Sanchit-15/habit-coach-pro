@@ -184,3 +184,84 @@
   .habit-card { flex-direction: column; align-items: stretch; }
   .habit-card-streak { margin: var(--space-sm) 0; }
 }
+
+/* ===== New: tags, color picker, note icon ===== */
+
+/* Color swatch grid for the accent-color picker */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.color-swatch:hover { transform: scale(1.1); }
+
+.color-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+/* Native HTML color input shown next to presets */
+.color-native {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Tag input row: text input + add button side by side */
+.tag-input-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Pill style for tags shown on cards or in the form */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--info-bg);
+  color: var(--info);
+  font-weight: 500;
+}
+
+.tag-pill.small { font-size: 10px; padding: 1px 6px; }
+
+.tag-pill-x {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+/* Small icon shown on cards when a habit has notes */
+.note-icon {
+  margin-left: var(--space-sm);
+  cursor: help;
+  font-size: 14px;
+}

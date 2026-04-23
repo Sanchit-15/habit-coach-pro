@@ -1,20 +1,19 @@
+import { useRef } from 'react';
 import { useHabits } from '../context/HabitContext.jsx';
 import './Insights.css';
 
 export default function Insights() {
-  const { habits } = useHabits();
+  const { habits, moods, importData } = useHabits();
+  const fileInputRef = useRef(null);
 
   // Calculate insights from data
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const dayCounts = Array(7).fill(0);
   const dayMisses = Array(7).fill(0);
   habits.forEach(h => h.completions.forEach(c => {
     const d = new Date(c.date).getDay();
     if (c.status === 'missed') dayMisses[d]++;
-    dayCounts[d]++;
   }));
-  const worstDayIdx = dayMisses.indexOf(Math.max(...dayMisses));
-  const worstDay = dayNames[worstDayIdx];
+  const worstDay = dayNames[dayMisses.indexOf(Math.max(...dayMisses))];
 
   const avgStreak = habits.length > 0 ? Math.round(habits.reduce((s, h) => s + h.streak, 0) / habits.length) : 0;
 
@@ -36,25 +35,25 @@ export default function Insights() {
     {
       icon: '📅', bg: 'var(--info-bg)', tag: 'Pattern', tagBg: 'var(--info-bg)', tagColor: 'var(--info)',
       title: `You miss habits most on ${worstDay}s.`,
-      body: `Our data shows that ${worstDay} is consistently your most challenging day for habit completion. Understanding this pattern is the first step to overcoming it.`,
+      body: `Our data shows that ${worstDay} is consistently your most challenging day for habit completion.`,
       suggestion: { icon: '💡', text: `Plan lighter habits for ${worstDay}s`, desc: 'Reduce friction by setting easier goals on your challenging days.' }
     },
     {
       icon: '🔥', bg: 'var(--primary-bg)', tag: 'Streak', tagBg: 'var(--primary-bg)', tagColor: 'var(--primary)',
       title: `Your streak usually breaks after ${avgStreak} days.`,
-      body: `Most of your habit streaks end around the ${avgStreak}-day mark. This is a critical point where extra motivation can make a difference.`,
+      body: `Most of your habit streaks end around the ${avgStreak}-day mark.`,
       suggestion: { icon: '🎯', text: 'Set a milestone reward at day ' + (avgStreak + 3), desc: 'Having something to look forward to can push you past your typical breaking point.' }
     },
     {
       icon: '🌅', bg: 'var(--success-bg)', tag: 'Timing', tagBg: 'var(--success-bg)', tagColor: 'var(--success)',
       title: `Morning completion rate is ${morningRate}%.`,
-      body: 'Habits scheduled in the morning tend to have higher completion rates. Your willpower is typically strongest early in the day.',
+      body: 'Habits scheduled in the morning tend to have higher completion rates.',
       suggestion: { icon: '⏰', text: 'Try moving challenging habits to the morning', desc: 'Tackle your hardest habits when your discipline is at its peak.' }
     },
     {
       icon: '⚠️', bg: 'var(--accent-bg)', tag: 'Reason', tagBg: 'var(--accent-bg)', tagColor: 'var(--accent)',
       title: `"${mainReason}" is your most common reason for missing habits.`,
-      body: `When you miss a habit, "${mainReason}" comes up most frequently. Addressing this root cause could significantly improve your consistency.`,
+      body: `When you miss a habit, "${mainReason}" comes up most frequently.`,
       suggestion: { icon: '🛡️', text: `Create a plan for when you feel "${mainReason.toLowerCase()}"`, desc: 'Having a pre-planned response removes decision fatigue in the moment.' }
     },
   ];
@@ -89,11 +88,57 @@ export default function Insights() {
       .slice(0, 5),
   }));
 
+  // Export everything (habits + moods) as a downloadable JSON file
+  const handleExport = () => {
+    const payload = { habits, moods, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consistify-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Read a user-selected file and merge it into localStorage via the context
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(String(reader.result));
+        importData(data);
+        alert('Import successful!');
+      } catch (err) {
+        alert('Import failed: invalid JSON file.');
+      }
+    };
+    reader.readAsText(file);
+    // Reset value so re-selecting the same file still triggers onChange
+    e.target.value = '';
+  };
+
   return (
     <div className="insights-page">
       <div className="page-header">
         <h1>Insights</h1>
         <p>AI-powered observations to help you build better habits.</p>
+      </div>
+
+      {/* Export / Import controls */}
+      <div className="export-import-row">
+        <button className="btn btn-outline btn-sm" onClick={handleExport}>⬇️ Export JSON</button>
+        <button className="btn btn-outline btn-sm" onClick={() => fileInputRef.current?.click()}>⬆️ Import JSON</button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          onChange={handleImportFile}
+          style={{ display: 'none' }}
+        />
       </div>
 
       {/* Summary stats cards */}
@@ -113,6 +158,19 @@ export default function Insights() {
         <div className="summary-card">
           <div className="summary-value">🔥 {bestStreakAll}</div>
           <div className="summary-label">Best Streak</div>
+        </div>
+      </div>
+
+      {/* Mood history for the past 7 days */}
+      <div className="insight-card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <div className="insight-title" style={{ marginBottom: 'var(--space-md)' }}>😊 Mood — Last 7 Days</div>
+        <div className="mood-history">
+          {moodHistory.map((m, i) => (
+            <div className="mood-history-cell" key={i}>
+              <div className="mood-history-emoji">{m.emoji}</div>
+              <div className="mood-history-label">{m.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
