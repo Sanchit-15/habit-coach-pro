@@ -61,10 +61,13 @@ export default function Dashboard() {
     return { day, completed, total: habits.length };
   });
 
-  {/* Filter habits by search query (simple case-insensitive string match) */}
-  const filteredHabits = habits.filter(h =>
-    h.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  {/* Filter habits by search query, category, and priority */}
+  const filteredHabits = habits.filter(h => {
+    const matchesName = h.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat = !categoryFilter || h.category === categoryFilter;
+    const matchesPri = !priorityFilter || h.priority === priorityFilter;
+    return matchesName && matchesCat && matchesPri;
+  });
 
   return (
     <div className="dashboard-page">
@@ -73,16 +76,40 @@ export default function Dashboard() {
         <p>Welcome back! Here's your habit overview for today.</p>
       </div>
 
-      {/* Search bar for filtering habits by name */}
-      <div className="search-bar-wrapper">
-        <input
-          className="form-input search-input"
-          type="text"
-          placeholder="🔍 Search habits..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-      </div>
+      {/* Empty state shown when there are no habits at all */}
+      {habits.length === 0 && (
+        <div className="card empty-state-card">
+          <div className="empty-state">
+            <div className="empty-state-icon">🌱</div>
+            <h3>No habits yet</h3>
+            <p>Start your consistency journey by creating your first habit.</p>
+            <Link to="/habits" className="btn btn-primary" style={{ marginTop: 'var(--space-md)', display: 'inline-block' }}>
+              + Add Your First Habit
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Search + filter bar (hidden when no habits) */}
+      {habits.length > 0 && (
+        <div className="search-bar-wrapper">
+          <input
+            className="form-input search-input"
+            type="text"
+            placeholder="🔍 Search habits..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <select className="form-select filter-select" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+            <option value="">All Categories</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select className="form-select filter-select" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
+            <option value="">All Priorities</option>
+            {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+          </select>
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card">
