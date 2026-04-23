@@ -154,8 +154,20 @@ export default function Dashboard() {
                     >
                       <div className="habit-color-dot" style={{ background: habit.color }} />
                       <div className="habit-info">
-                        <div className="habit-name">{habit.name}</div>
-                        <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+                        <div className="habit-name">
+                          {habit.name}
+                          <span className="priority-dot" style={{ background: PRIORITY_COLORS[habit.priority] || '#9CA3AF' }} title={`${habit.priority} priority`} />
+                        </div>
+                        <div className="habit-meta">
+                          <span
+                            className="category-badge"
+                            style={{
+                              background: (CATEGORY_COLORS[habit.category] || '#9CA3AF') + '22',
+                              color: CATEGORY_COLORS[habit.category] || '#6B7280',
+                            }}
+                          >{habit.category || 'Personal'}</span>
+                          {' '}{habit.goal} · {habit.time} · 🔥 {habit.streak}
+                        </div>
                       </div>
                       <div className="habit-actions">
                         <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
