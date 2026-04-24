@@ -12,6 +12,7 @@ import Analytics from './pages/Analytics.jsx';
 import Reports from './pages/Reports.jsx';
 import Insights from './pages/Insights.jsx';
 import Settings from './pages/Settings.jsx';
+import Archive from './pages/Archive.jsx';
 import AppLayout from './components/AppLayout.jsx';
 
 function ProtectedRoute({ children }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
       <Route path="/reports" element={<ProtectedRoute><AppLayout><Reports /></AppLayout></ProtectedRoute>} />
       <Route path="/insights" element={<ProtectedRoute><AppLayout><Insights /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
+      <Route path="/archive" element={<ProtectedRoute><AppLayout><Archive /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
