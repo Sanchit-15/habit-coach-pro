@@ -181,6 +181,7 @@ export default function Insights() {
         )}
       </div>
 
+      <div className="insights-grid">
         {insights.map((insight, i) => (
           <div className="insight-card" key={i}>
             <div className="insight-header">
