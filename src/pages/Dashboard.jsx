@@ -25,7 +25,7 @@ function currentWeekDates() {
 }
 
 export default function Dashboard() {
-  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood } = useHabits();
+  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood, useStreakFreeze, freezes } = useHabits();
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
@@ -266,6 +266,29 @@ export default function Dashboard() {
             {selectedReason === 'Other' && (
               <input className="form-input" placeholder="Tell us more..." value={customReason} onChange={e => setCustomReason(e.target.value)} style={{ width: '100%', marginBottom: 'var(--space-md)' }} />
             )}
+
+            {/* Streak Freeze: lets the user excuse a miss without losing the streak */}
+            <div className="freeze-box">
+              <div className="freeze-info">
+                <strong>🧊 Streak Freeze</strong>
+                <span>{freezes.count} of 1 left this week</span>
+              </div>
+              <button
+                className="btn btn-outline btn-sm"
+                disabled={freezes.count <= 0}
+                onClick={() => {
+                  // First record the miss so today has an entry, then convert it to "excused"
+                  const reason = selectedReason === 'Other' ? customReason : (selectedReason || 'Excused');
+                  checkIn(missModal, 'missed', reason);
+                  // Defer the freeze swap until after the miss has been written
+                  setTimeout(() => {
+                    useStreakFreeze(missModal);
+                    setMissModal(null);
+                  }, 0);
+                }}
+              >Use Streak Freeze</button>
+            </div>
+
             <div className="modal-actions">
               <button className="btn btn-outline btn-sm" onClick={() => setMissModal(null)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={submitMiss} disabled={!selectedReason || (selectedReason === 'Other' && !customReason)}>Submit</button>
