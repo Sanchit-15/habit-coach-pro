@@ -1,52 +1,105 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useHabits } from '../context/HabitContext.jsx';
+import { getQuoteOfTheDay } from '../utils/quotes.js';
+import { useReminders } from '../utils/useReminders.js';
+import { fireConfetti } from '../utils/confetti.js';
+import UndoToast from '../components/UndoToast.jsx';
 import './Dashboard.css';
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const reasons = ['Busy', 'Forgot', 'Tired', 'Sick', 'Low motivation'];
+const moodEmojis = ['😢', '😐', '🙂', '😀', '🤩'];
 
-const quotes = [
-  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
-  { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
-  { text: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
-];
+// Get an array of YYYY-MM-DD strings for the current week (Mon..Sun)
+function currentWeekDates() {
+  const out = [];
+  const today = new Date();
+  const day = today.getDay() === 0 ? 7 : today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (day - 1));
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    out.push(d.toISOString().split('T')[0]);
+  }
+  return out;
+}
 
 export default function Dashboard() {
-  const { habits, checkIn } = useHabits();
+  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood } = useHabits();
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
-  // Search filter state for filtering habits by name
   const [searchQuery, setSearchQuery] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
+  const [toast, setToast] = useState(null); // { habitId, message }
+  const dragId = useRef(null);
 
   const today = new Date().toISOString().split('T')[0];
-  const quote = quotes[Math.floor(Date.now() / 86400000) % quotes.length];
+  const quote = getQuoteOfTheDay();
+  const todayMood = moods[today];
 
-  const totalCompleted = habits.reduce((sum, h) => sum + h.completions.filter(c => c.status === 'done').length, 0);
-  const totalEntries = habits.reduce((sum, h) => sum + h.completions.length, 0);
+  // Schedule notifications for habits with reminderTime
+  useReminders(habits);
+
+  // Stats
+  const totalCompleted = habits.reduce((s, h) => s + h.completions.filter(c => c.status === 'done').length, 0);
+  const totalEntries = habits.reduce((s, h) => s + h.completions.length, 0);
   const completionRate = totalEntries > 0 ? Math.round((totalCompleted / totalEntries) * 100) : 0;
   const bestStreak = Math.max(...habits.map(h => h.streak), 0);
   const consistencyScore = completionRate >= 90 ? 'A+' : completionRate >= 75 ? 'A' : completionRate >= 60 ? 'B' : completionRate >= 40 ? 'C' : 'D';
 
-  const getTodayStatus = (habit) => {
-    const entry = habit.completions.find(c => c.date === today);
-    return entry?.status || null;
-  };
+  // Active (non-archived) habits
+  const active = useMemo(() => habits.filter(h => !h.archived).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [habits]);
 
-  const handleDone = (id) => {
+  // All unique tags for filter dropdown
+  const allTags = useMemo(() => {
+    const set = new Set();
+    active.forEach(h => (h.tags || []).forEach(t => set.add(t)));
+    return Array.from(set);
+  }, [active]);
+
+  // Apply search + tag filter
+  const filteredHabits = active.filter(h => {
+    const matchesQuery = h.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTag = !tagFilter || (h.tags || []).includes(tagFilter);
+    return matchesQuery && matchesTag;
+  });
+
+  const getTodayStatus = (habit) => habit.completions.find(c => c.date === today)?.status || null;
+
+  // Count weekly completions for a habit
+  const weekDates = currentWeekDates();
+  const weeklyDone = (habit) => habit.completions.filter(c => c.status === 'done' && weekDates.includes(c.date)).length;
+
+  const handleDone = (id, name) => {
     checkIn(id, 'done');
+    fireConfetti();
+    setToast({ habitId: id, message: `"${name}" marked complete!` });
   };
 
   const handleMiss = (id) => {
-    setMissModal(id);
-    setSelectedReason('');
-    setCustomReason('');
+    setMissModal(id); setSelectedReason(''); setCustomReason('');
   };
 
   const submitMiss = () => {
     const reason = selectedReason === 'Other' ? customReason : selectedReason;
     checkIn(missModal, 'missed', reason);
     setMissModal(null);
+  };
+
+  // Drag and drop handlers using HTML5 native API
+  const onDragStart = (id) => { dragId.current = id; };
+  const onDragOver = (e) => e.preventDefault();
+  const onDrop = (targetId) => {
+    if (dragId.current == null || dragId.current === targetId) return;
+    const ids = filteredHabits.map(h => h.id);
+    const from = ids.indexOf(dragId.current);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    ids.splice(to, 0, ids.splice(from, 1)[0]);
+    reorderHabits(ids);
+    dragId.current = null;
   };
 
   const weeklyData = weekDays.map((day, i) => {
@@ -56,14 +109,9 @@ export default function Dashboard() {
     const targetDate = new Date(date);
     targetDate.setDate(date.getDate() - diff);
     const dateStr = targetDate.toISOString().split('T')[0];
-    const completed = habits.filter(h => h.completions.some(c => c.date === dateStr && c.status === 'done')).length;
-    return { day, completed, total: habits.length };
+    const completed = active.filter(h => h.completions.some(c => c.date === dateStr && c.status === 'done')).length;
+    return { day, completed, total: active.length };
   });
-
-  {/* Filter habits by search query (simple case-insensitive string match) */}
-  const filteredHabits = habits.filter(h =>
-    h.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="dashboard-page">
@@ -72,8 +120,32 @@ export default function Dashboard() {
         <p>Welcome back! Here's your habit overview for today.</p>
       </div>
 
-      {/* Search bar for filtering habits by name */}
-      <div className="search-bar-wrapper">
+      {/* Quote of the day banner */}
+      <div className="quote-banner">
+        <span className="quote-banner-icon">💬</span>
+        <div>
+          <div className="quote-banner-text">"{quote.text}"</div>
+          <div className="quote-banner-author">— {quote.author}</div>
+        </div>
+      </div>
+
+      {/* Mood tracker row */}
+      <div className="mood-tracker">
+        <span className="mood-label">How are you feeling today?</span>
+        <div className="mood-emojis">
+          {moodEmojis.map(e => (
+            <button
+              key={e}
+              className={`mood-btn ${todayMood === e ? 'selected' : ''}`}
+              onClick={() => setTodayMood(e)}
+              title={`Save mood ${e}`}
+            >{e}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Search + tag filter row */}
+      <div className="filter-row">
         <input
           className="form-input search-input"
           type="text"
@@ -81,27 +153,19 @@ export default function Dashboard() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
         />
+        {allTags.length > 0 && (
+          <select className="form-input tag-filter" value={tagFilter} onChange={e => setTagFilter(e.target.value)}>
+            <option value="">All tags</option>
+            {allTags.map(t => <option key={t} value={t}>#{t}</option>)}
+          </select>
+        )}
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-label">Best Streak</div>
-          <div className="stat-value" style={{ color: 'var(--primary)' }}>{bestStreak} 🔥</div>
-          <div className="stat-change positive">Keep it going!</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Completion Rate</div>
-          <div className="stat-value" style={{ color: 'var(--success)' }}>{completionRate}%</div>
-          <div className="stat-change positive">+5% this week</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Habits Active</div>
-          <div className="stat-value" style={{ color: 'var(--info)' }}>{habits.length}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Consistency Score</div>
-          <div className="stat-value" style={{ color: 'var(--accent)' }}>{consistencyScore}</div>
-        </div>
+        <div className="stat-card"><div className="stat-label">Best Streak</div><div className="stat-value" style={{ color: 'var(--primary)' }}>{bestStreak} 🔥</div></div>
+        <div className="stat-card"><div className="stat-label">Completion Rate</div><div className="stat-value" style={{ color: 'var(--success)' }}>{completionRate}%</div></div>
+        <div className="stat-card"><div className="stat-label">Habits Active</div><div className="stat-value" style={{ color: 'var(--info)' }}>{active.length}</div></div>
+        <div className="stat-card"><div className="stat-label">Consistency</div><div className="stat-value" style={{ color: 'var(--accent)' }}>{consistencyScore}</div></div>
       </div>
 
       <div className="dashboard-grid">
@@ -109,29 +173,53 @@ export default function Dashboard() {
           <div className="card">
             <div className="card-header">
               <span className="card-title">Today's Habits</span>
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>Drag to reorder</span>
             </div>
             <div className="today-habits-list">
               {filteredHabits.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-muted)' }}>
-                  No habits match your search.
+                  No habits match your filters.
                 </div>
               ) : (
                 filteredHabits.map(habit => {
                   const status = getTodayStatus(habit);
+                  const done = weeklyDone(habit);
+                  const goal = habit.weeklyGoal || 7;
+                  const pct = Math.min(100, Math.round((done / goal) * 100));
                   return (
                     <div
                       className={`today-habit ${status === 'done' ? 'habit-completed-today' : ''}`}
                       key={habit.id}
+                      style={{ borderLeft: `4px solid ${habit.color}` }}
+                      draggable
+                      onDragStart={() => onDragStart(habit.id)}
+                      onDragOver={onDragOver}
+                      onDrop={() => onDrop(habit.id)}
                     >
-                      <div className="habit-color-dot" style={{ background: habit.color }} />
                       <div className="habit-info">
-                        <div className="habit-name">{habit.name}</div>
-                        <div className="habit-meta">{habit.goal} · {habit.time} · 🔥 {habit.streak}</div>
+                        <div className="habit-name">
+                          {habit.name}
+                          {habit.note && <span className="note-icon" title={habit.note}>📝</span>}
+                        </div>
+                        <div className="habit-meta">
+                          {habit.goal} · 🔥 {habit.streak}
+                          {habit.reminderTime && <> · 🔔 {habit.reminderTime}</>}
+                        </div>
+                        {(habit.tags || []).length > 0 && (
+                          <div className="habit-tags-inline">
+                            {habit.tags.map(t => <span key={t} className="tag-pill">#{t}</span>)}
+                          </div>
+                        )}
+                        {/* Weekly goal progress */}
+                        <div className="weekly-progress" title={`${done}/${goal} this week`}>
+                          <div className="weekly-progress-bar" style={{ width: `${pct}%`, background: habit.color }} />
+                        </div>
+                        <div className="weekly-progress-text">{done}/{goal} this week</div>
                       </div>
                       <div className="habit-actions">
-                        <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id)} title="Mark done">✓</button>
+                        <button className={`check-btn ${status === 'done' ? 'done' : ''}`} onClick={() => handleDone(habit.id, habit.name)} title="Mark done">✓</button>
                         <button className={`check-btn ${status === 'missed' ? 'missed' : ''}`} onClick={() => handleMiss(habit.id)} title="Mark missed">✗</button>
+                        <button className="check-btn" onClick={() => archiveHabit(habit.id)} title="Archive">📦</button>
                       </div>
                     </div>
                   );
@@ -141,9 +229,7 @@ export default function Dashboard() {
           </div>
 
           <div className="card" style={{ marginTop: 'var(--space-lg)' }}>
-            <div className="card-header">
-              <span className="card-title">Weekly Progress</span>
-            </div>
+            <div className="card-header"><span className="card-title">Weekly Progress</span></div>
             <div className="chart-container">
               {weeklyData.map(d => (
                 <div className="chart-bar-group" key={d.day}>
@@ -187,6 +273,15 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Undo toast */}
+      {toast && (
+        <UndoToast
+          message={toast.message}
+          onUndo={() => undoCheckIn(toast.habitId)}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );
