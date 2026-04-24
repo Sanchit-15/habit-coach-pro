@@ -351,3 +351,36 @@
 /* Make today-habit a draggable column layout for new content */
 .today-habit { cursor: grab; }
 .today-habit:active { cursor: grabbing; }
+
+/* Streak Freeze box inside the miss modal */
+.freeze-box {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--info-bg, var(--primary-bg));
+  border: 1px dashed var(--info, var(--primary));
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin: var(--space-md) 0;
+  gap: var(--space-md); flex-wrap: wrap;
+}
+.freeze-info { display: flex; flex-direction: column; font-size: var(--font-size-xs); }
+.freeze-info strong { font-size: var(--font-size-sm); color: var(--text); }
+
+/* Smooth transitions everywhere */
+.btn, .check-btn, .icon-btn, .reason-btn, .mood-btn, .stat-card, .today-habit, .card {
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Friendly empty state illustration */
+.empty-illustration {
+  text-align: center; padding: var(--space-2xl, 48px) var(--space-lg);
+  color: var(--text-secondary);
+}
+.empty-illustration-emoji {
+  font-size: 64px; margin-bottom: var(--space-md);
+  animation: bounce 2s infinite ease-in-out;
+}
+.empty-illustration h3 { margin-bottom: var(--space-xs); color: var(--text); }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}

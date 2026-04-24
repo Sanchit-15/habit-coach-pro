@@ -129,6 +129,58 @@ export default function Insights() {
         </div>
       </div>
 
+      {/* 30-day Consistency Map per habit */}
+      <div className="insight-card" style={{ marginBottom: 'var(--space-lg)' }}>
+        <div className="insight-header">
+          <div className="insight-icon" style={{ background: 'var(--success-bg)' }}>🗺️</div>
+          <div className="insight-title">30-Day Consistency Map</div>
+        </div>
+        {habits.length === 0 ? (
+          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>Add a habit to see your map.</div>
+        ) : (
+          habits.map(habit => {
+            // Build the last 30 calendar dates oldest → newest
+            const days = Array.from({ length: 30 }, (_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (29 - i));
+              return d.toISOString().split('T')[0];
+            });
+            return (
+              <div className="heatmap-row" key={habit.id}>
+                <div className="heatmap-label">
+                  <span className="heatmap-dot" style={{ background: habit.color }} />
+                  {habit.name}
+                </div>
+                <div className="heatmap-grid">
+                  {days.map(date => {
+                    // Find this habit's entry for that date (if any)
+                    const entry = habit.completions.find(c => c.date === date);
+                    // Pick a status keyword for styling/title
+                    const status = entry?.status || 'none';
+                    // Use the habit color if completed, grey otherwise
+                    const bg = status === 'done'
+                      ? habit.color
+                      : status === 'excused'
+                        ? 'var(--info-bg)'
+                        : status === 'missed'
+                          ? 'var(--danger-bg)'
+                          : 'var(--background)';
+                    return (
+                      <div
+                        key={date}
+                        className="heatmap-cell"
+                        style={{ background: bg }}
+                        title={`${date} — ${status}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       <div className="insights-grid">
         {insights.map((insight, i) => (
           <div className="insight-card" key={i}>

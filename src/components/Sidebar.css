@@ -196,3 +196,44 @@
     display: flex;
   }
 }
+
+/* === Responsive bottom nav for screens under 768px === */
+@media (max-width: 768px) {
+  /* Convert the sidebar into a fixed bottom navigation bar */
+  .sidebar {
+    transform: none;                 /* always visible at the bottom */
+    top: auto;                       /* override the top:0 from desktop */
+    bottom: 0;                       /* anchor to the bottom of the screen */
+    left: 0; right: 0;
+    width: 100%;                     /* full width */
+    height: 64px;                    /* compact bar height */
+    flex-direction: row;             /* horizontal items */
+    border-right: none;              /* remove side border */
+    border-top: 1px solid var(--border);
+    z-index: 100;
+  }
+  /* Hide the header logo + footer profile to keep the bar compact */
+  .sidebar-header, .sidebar-footer { display: none; }
+  /* Stretch the nav to fill horizontally and space items evenly */
+  .sidebar-nav {
+    flex-direction: row;
+    flex: 1; padding: 0;
+    justify-content: space-around; align-items: center;
+    gap: 0;
+  }
+  /* Stack icon above label inside each link */
+  .sidebar-link {
+    flex-direction: column;
+    gap: 2px; padding: 6px 4px;
+    font-size: 10px;
+    flex: 1; justify-content: center;
+    border-radius: 0;
+  }
+  .sidebar-link-icon { font-size: 18px; }
+  /* No more dark overlay since the bar is always visible */
+  .sidebar-overlay { display: none !important; }
+  /* Hide the hamburger header — bottom nav replaces it */
+  .mobile-header { display: none; }
+  /* Push main content up so it doesn't slide under the bottom nav */
+  .app-content { padding-bottom: 80px !important; }
+}

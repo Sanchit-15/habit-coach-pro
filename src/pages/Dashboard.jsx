@@ -2,7 +2,6 @@ import { useState, useMemo, useRef } from 'react';
 import { useHabits } from '../context/HabitContext.jsx';
 import { getQuoteOfTheDay } from '../utils/quotes.js';
 import { useReminders } from '../utils/useReminders.js';
-import { fireConfetti } from '../utils/confetti.js';
 import UndoToast from '../components/UndoToast.jsx';
 import './Dashboard.css';
 
@@ -26,7 +25,7 @@ function currentWeekDates() {
 }
 
 export default function Dashboard() {
-  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood } = useHabits();
+  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood, applyStreakFreeze, freezes } = useHabits();
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
@@ -73,8 +72,8 @@ export default function Dashboard() {
   const weeklyDone = (habit) => habit.completions.filter(c => c.status === 'done' && weekDates.includes(c.date)).length;
 
   const handleDone = (id, name) => {
+    // checkIn() now triggers confetti + ding internally via the context
     checkIn(id, 'done');
-    fireConfetti();
     setToast({ habitId: id, message: `"${name}" marked complete!` });
   };
 
@@ -176,7 +175,15 @@ export default function Dashboard() {
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>Drag to reorder</span>
             </div>
             <div className="today-habits-list">
-              {filteredHabits.length === 0 ? (
+              {active.length === 0 ? (
+                /* Friendly empty state shown when the user has zero habits */
+                <div className="empty-illustration">
+                  <div className="empty-illustration-emoji">🌱</div>
+                  <h3>No habits yet!</h3>
+                  <p>Start your journey by creating your first habit.</p>
+                  <a href="/habits" className="btn btn-primary" style={{ marginTop: 'var(--space-md)' }}>+ Add Habit</a>
+                </div>
+              ) : filteredHabits.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-muted)' }}>
                   No habits match your filters.
                 </div>
@@ -267,6 +274,29 @@ export default function Dashboard() {
             {selectedReason === 'Other' && (
               <input className="form-input" placeholder="Tell us more..." value={customReason} onChange={e => setCustomReason(e.target.value)} style={{ width: '100%', marginBottom: 'var(--space-md)' }} />
             )}
+
+            {/* Streak Freeze: lets the user excuse a miss without losing the streak */}
+            <div className="freeze-box">
+              <div className="freeze-info">
+                <strong>🧊 Streak Freeze</strong>
+                <span>{freezes.count} of 1 left this week</span>
+              </div>
+              <button
+                className="btn btn-outline btn-sm"
+                disabled={freezes.count <= 0}
+                onClick={() => {
+                  // First record the miss so today has an entry, then convert it to "excused"
+                  const reason = selectedReason === 'Other' ? customReason : (selectedReason || 'Excused');
+                  checkIn(missModal, 'missed', reason);
+                  // Defer the freeze swap until after the miss has been written
+                  setTimeout(() => {
+                    applyStreakFreeze(missModal);
+                    setMissModal(null);
+                  }, 0);
+                }}
+              >Use Streak Freeze</button>
+            </div>
+
             <div className="modal-actions">
               <button className="btn btn-outline btn-sm" onClick={() => setMissModal(null)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={submitMiss} disabled={!selectedReason || (selectedReason === 'Other' && !customReason)}>Submit</button>

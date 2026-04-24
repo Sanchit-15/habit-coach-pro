@@ -124,3 +124,30 @@
 }
 .mood-history-emoji { font-size: 28px; line-height: 1; }
 .mood-history-date { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 4px; }
+
+/* 30-day consistency map */
+.heatmap-row {
+  display: flex; align-items: center; gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+.heatmap-label {
+  flex: 0 0 140px; display: flex; align-items: center; gap: 8px;
+  font-size: var(--font-size-sm); font-weight: 500; color: var(--text);
+}
+.heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.heatmap-grid {
+  flex: 1; display: grid; grid-template-columns: repeat(15, 1fr);
+  gap: 4px;
+}
+.heatmap-cell {
+  aspect-ratio: 1 / 1; border-radius: 3px;
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease-in-out;
+  cursor: help;
+}
+.heatmap-cell:hover { transform: scale(1.4); z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+@media (max-width: 600px) {
+  .heatmap-row { flex-direction: column; align-items: stretch; }
+  .heatmap-label { flex: none; }
+  .heatmap-grid { grid-template-columns: repeat(15, 1fr); }
+}

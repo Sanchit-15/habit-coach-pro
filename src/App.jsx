@@ -14,6 +14,7 @@ import Insights from './pages/Insights.jsx';
 import Settings from './pages/Settings.jsx';
 import Archive from './pages/Archive.jsx';
 import AppLayout from './components/AppLayout.jsx';
+import GlobalConfetti from './components/GlobalConfetti.jsx'; // mounts the fullscreen confetti once
 
 function ProtectedRoute({ children }) {
   const { user, isOnboarded } = useAuth();
@@ -57,6 +58,7 @@ export default function App() {
         <HabitProvider>
           <BrowserRouter>
             <AppRoutes />
+            <GlobalConfetti />
           </BrowserRouter>
         </HabitProvider>
       </AuthProvider>
