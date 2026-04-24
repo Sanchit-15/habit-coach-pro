@@ -72,8 +72,8 @@ export default function Dashboard() {
   const weeklyDone = (habit) => habit.completions.filter(c => c.status === 'done' && weekDates.includes(c.date)).length;
 
   const handleDone = (id, name) => {
+    // checkIn() now triggers confetti + ding internally via the context
     checkIn(id, 'done');
-    fireConfetti();
     setToast({ habitId: id, message: `"${name}" marked complete!` });
   };
 
