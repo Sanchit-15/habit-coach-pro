@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useHabits } from '../context/HabitContext.jsx'; // gives us the soundEnabled flag + toggle
 import './Settings.css';
 
 export default function Settings() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { soundEnabled, toggleSound } = useHabits(); // sound effects setting from context
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [reminders, setReminders] = useState(true);
@@ -57,6 +59,14 @@ export default function Settings() {
             <div className="settings-row-desc">Get reminded about your daily habits</div>
           </div>
           <button className={`toggle-switch ${reminders ? 'active' : ''}`} onClick={() => setReminders(!reminders)} />
+        </div>
+        {/* Sound effects toggle — controls the "ding" played on habit completion */}
+        <div className="settings-row">
+          <div>
+            <div className="settings-row-label">Sound Effects</div>
+            <div className="settings-row-desc">Play a short sound when you mark a habit done</div>
+          </div>
+          <button className={`toggle-switch ${soundEnabled ? 'active' : ''}`} onClick={toggleSound} />
         </div>
         <div className="settings-row">
           <div>
