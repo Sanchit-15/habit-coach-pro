@@ -1,10 +1,15 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const HabitContext = createContext(null);
 
 // Storage keys for localStorage persistence
 const STORAGE_KEY = 'consistify_habits';
 const MOOD_KEY = 'consistify_moods';
+const SOUND_KEY = 'consistify_sound';
+const FREEZE_KEY = 'consistify_freezes';
+
+// How many freezes a user gets every week (default = 1)
+const WEEKLY_FREEZE_LIMIT = 1;
 
 // Default habits used when no saved data exists
 const defaultHabits = [
@@ -14,8 +19,16 @@ const defaultHabits = [
   { id: 4, name: 'Journal', goal: '1 entry', frequency: 'daily', time: 'evening', streak: 3, completions: generateCompletions(3), color: '#F5A623', note: '', reminderTime: '22:00', weeklyGoal: 7, tags: ['mindfulness'], archived: false, order: 3 },
 ];
 
+// Returns an ISO date string (YYYY-MM-DD) for the most recent Monday — used to reset weekly freezes
+function currentWeekStart() {
+  const d = new Date();
+  const day = d.getDay() === 0 ? 7 : d.getDay();
+  d.setDate(d.getDate() - (day - 1));
+  return d.toISOString().split('T')[0];
+}
+
 /**
- * Safely migrate old habit formats into proper objects with all new feature fields.
+ * Safely migrate old habit formats into proper objects with all feature fields.
  */
 function migrateHabit(habit, index) {
   if (typeof habit === 'string') {
@@ -32,7 +45,6 @@ function migrateHabit(habit, index) {
     completedDates: habit.completedDates || [],
     createdAt: habit.createdAt || new Date().toISOString(),
     streak: habit.streak || 0,
-    // New feature fields with safe defaults
     note: habit.note || '',
     reminderTime: habit.reminderTime || '',
     weeklyGoal: habit.weeklyGoal ?? 7,
@@ -49,9 +61,7 @@ function loadHabits() {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) return parsed.map(migrateHabit);
     }
-  } catch (e) {
-    console.warn('Failed to load habits:', e);
-  }
+  } catch (e) { console.warn('Failed to load habits:', e); }
   return defaultHabits;
 }
 
@@ -59,10 +69,27 @@ function loadMoods() {
   try {
     const raw = localStorage.getItem(MOOD_KEY);
     if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.warn('Failed to load moods:', e);
-  }
+  } catch (e) { console.warn('Failed to load moods:', e); }
   return {};
+}
+
+function loadSoundEnabled() {
+  try {
+    const raw = localStorage.getItem(SOUND_KEY);
+    if (raw === 'false') return false;
+  } catch {}
+  return true;
+}
+
+function loadFreezes() {
+  try {
+    const raw = localStorage.getItem(FREEZE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.weekStart === currentWeekStart()) return parsed;
+    }
+  } catch {}
+  return { weekStart: currentWeekStart(), count: WEEKLY_FREEZE_LIMIT };
 }
 
 function generateCompletions(streak) {
@@ -87,6 +114,9 @@ function generateCompletions(streak) {
 export function HabitProvider({ children }) {
   const [habits, setHabits] = useState(loadHabits);
   const [moods, setMoods] = useState(loadMoods);
+  const [soundEnabled, setSoundEnabled] = useState(loadSoundEnabled);
+  const [freezes, setFreezes] = useState(loadFreezes);
+  const [confettiActive, setConfettiActive] = useState(false);
   const [nextId, setNextId] = useState(() => {
     const loaded = loadHabits();
     return loaded.length > 0 ? Math.max(...loaded.map(h => h.id)) + 1 : 1;
@@ -103,6 +133,32 @@ export function HabitProvider({ children }) {
     try { localStorage.setItem(MOOD_KEY, JSON.stringify(moods)); }
     catch (e) { console.warn('Mood save failed:', e); }
   }, [moods]);
+
+  // Persist sound toggle whenever it changes
+  useEffect(() => {
+    try { localStorage.setItem(SOUND_KEY, String(soundEnabled)); }
+    catch (e) { console.warn('Sound save failed:', e); }
+  }, [soundEnabled]);
+
+  // Persist freezes whenever they change
+  useEffect(() => {
+    try { localStorage.setItem(FREEZE_KEY, JSON.stringify(freezes)); }
+    catch (e) { console.warn('Freeze save failed:', e); }
+  }, [freezes]);
+
+  const triggerConfetti = useCallback(() => {
+    setConfettiActive(true);
+    setTimeout(() => setConfettiActive(false), 2500);
+  }, []);
+
+  const playDing = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      const a = new Audio('data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YS4AAAAAAAAA/3//f/9//3//f/9//3//f/9//3//f/9//3//f/9//3//f/9//3//f/9//38=');
+      a.volume = 0.4;
+      a.play().catch(() => {});
+    } catch {}
+  }, [soundEnabled]);
 
   const addHabit = (habit) => {
     const colors = ['#E8553A', '#2F80ED', '#27AE60', '#F5A623', '#9B59B6', '#1ABC9C'];
@@ -140,12 +196,32 @@ export function HabitProvider({ children }) {
       const completions = existing >= 0
         ? h.completions.map((c, i) => i === existing ? entry : c)
         : [entry, ...h.completions];
-      const streak = status === 'done' ? h.streak + 1 : 0;
+      let streak = h.streak;
+      if (status === 'done') streak = h.streak + 1;
+      else if (status === 'missed') streak = 0;
       return { ...h, completions, streak };
     }));
+    if (status === 'done') {
+      triggerConfetti();
+      playDing();
+    }
   };
 
-  // Undo a check-in by removing today's entry
+  const useStreakFreeze = (id) => {
+    if (freezes.count <= 0) return false;
+    const today = new Date().toISOString().split('T')[0];
+    setHabits(prev => prev.map(h => {
+      if (h.id !== id) return h;
+      const idx = h.completions.findIndex(c => c.date === today);
+      if (idx < 0) return h;
+      const updated = { date: today, status: 'excused' };
+      const completions = h.completions.map((c, i) => i === idx ? updated : c);
+      return { ...h, completions };
+    }));
+    setFreezes(f => ({ ...f, count: f.count - 1 }));
+    return true;
+  };
+
   const undoCheckIn = (id) => {
     const today = new Date().toISOString().split('T')[0];
     setHabits(prev => prev.map(h => {
@@ -159,11 +235,9 @@ export function HabitProvider({ children }) {
     }));
   };
 
-  // Archive / restore a habit
   const archiveHabit = (id) => updateHabit(id, { archived: true });
   const restoreHabit = (id) => updateHabit(id, { archived: false });
 
-  // Reorder habits by id list (used by drag & drop)
   const reorderHabits = (orderedIds) => {
     setHabits(prev => {
       const map = Object.fromEntries(prev.map(h => [h.id, h]));
@@ -173,13 +247,11 @@ export function HabitProvider({ children }) {
     });
   };
 
-  // Set today's mood (one of the emoji strings)
   const setTodayMood = (emoji) => {
     const today = new Date().toISOString().split('T')[0];
     setMoods(prev => ({ ...prev, [today]: emoji }));
   };
 
-  // Replace all data (used by JSON import)
   const replaceData = ({ habits: h, moods: m }) => {
     if (Array.isArray(h)) {
       const migrated = h.map(migrateHabit);
@@ -189,12 +261,16 @@ export function HabitProvider({ children }) {
     if (m && typeof m === 'object') setMoods(m);
   };
 
+  const toggleSound = () => setSoundEnabled(v => !v);
+
   return (
     <HabitContext.Provider value={{
-      habits, moods,
-      addHabit, updateHabit, deleteHabit, checkIn, undoCheckIn,
+      habits, moods, soundEnabled, freezes, confettiActive,
+      addHabit, updateHabit, deleteHabit,
+      checkIn, undoCheckIn, useStreakFreeze,
       archiveHabit, restoreHabit, reorderHabits,
-      setTodayMood, replaceData,
+      setTodayMood, replaceData, toggleSound,
+      triggerConfetti, playDing,
     }}>
       {children}
     </HabitContext.Provider>
