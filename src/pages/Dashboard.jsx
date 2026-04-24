@@ -2,7 +2,6 @@ import { useState, useMemo, useRef } from 'react';
 import { useHabits } from '../context/HabitContext.jsx';
 import { getQuoteOfTheDay } from '../utils/quotes.js';
 import { useReminders } from '../utils/useReminders.js';
-import { fireConfetti } from '../utils/confetti.js';
 import UndoToast from '../components/UndoToast.jsx';
 import './Dashboard.css';
 
