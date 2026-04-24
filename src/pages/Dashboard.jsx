@@ -175,7 +175,15 @@ export default function Dashboard() {
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>Drag to reorder</span>
             </div>
             <div className="today-habits-list">
-              {filteredHabits.length === 0 ? (
+              {active.length === 0 ? (
+                /* Friendly empty state shown when the user has zero habits */
+                <div className="empty-illustration">
+                  <div className="empty-illustration-emoji">🌱</div>
+                  <h3>No habits yet!</h3>
+                  <p>Start your journey by creating your first habit.</p>
+                  <a href="/habits" className="btn btn-primary" style={{ marginTop: 'var(--space-md)' }}>+ Add Habit</a>
+                </div>
+              ) : filteredHabits.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-muted)' }}>
                   No habits match your filters.
                 </div>
