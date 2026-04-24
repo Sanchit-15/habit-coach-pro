@@ -1,0 +1,34 @@
+/* Fullscreen overlay that sits above every other UI layer */
+.confetti-overlay {
+  position: fixed;            /* anchored to the viewport, ignores parent overflow */
+  top: 0;                     /* start at the very top */
+  left: 0;                    /* start at the very left */
+  width: 100vw;               /* cover full viewport width */
+  height: 100vh;              /* cover full viewport height */
+  pointer-events: none;       /* never intercept clicks */
+  overflow: hidden;           /* hide pieces that fall past the edge */
+  z-index: 9999;              /* above sidebars, modals, toasts */
+}
+
+/* A single confetti rectangle */
+.confetti-dot {
+  position: absolute;         /* positioned freely inside the overlay */
+  top: -20px;                 /* start just above the viewport */
+  border-radius: 2px;         /* slightly rounded corners */
+  animation-name: confettiFallFS;       /* the keyframes that move it down */
+  animation-timing-function: linear;    /* constant fall speed */
+  animation-fill-mode: forwards;        /* keep the final state */
+  will-change: transform, opacity;      /* hint browser for smooth animation */
+}
+
+/* Keyframes that move the piece from top to bottom while spinning */
+@keyframes confettiFallFS {
+  0% {
+    transform: translateY(0) rotate(0deg);     /* start at the top, no extra rotation */
+    opacity: 1;                                /* fully visible */
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg); /* fall past the bottom while spinning */
+    opacity: 0;                                  /* fade out at the end */
+  }
+}
