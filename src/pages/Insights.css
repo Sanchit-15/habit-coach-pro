@@ -115,3 +115,12 @@
   color: var(--text-muted);
   margin-top: var(--space-xs);
 }
+
+/* Mood history grid */
+.mood-history { display: flex; gap: var(--space-sm); justify-content: space-between; }
+.mood-history-cell {
+  flex: 1; text-align: center; padding: var(--space-md) var(--space-sm);
+  background: var(--background); border-radius: var(--radius-md);
+}
+.mood-history-emoji { font-size: 28px; line-height: 1; }
+.mood-history-date { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 4px; }

@@ -299,3 +299,55 @@
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Quote of the day banner */
+.quote-banner {
+  display: flex; gap: var(--space-md); align-items: flex-start;
+  background: linear-gradient(135deg, var(--primary-bg), var(--accent-bg, var(--primary-bg)));
+  border-left: 4px solid var(--primary);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+.quote-banner-icon { font-size: 24px; }
+.quote-banner-text { font-style: italic; font-weight: 500; color: var(--text); }
+.quote-banner-author { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 4px; }
+
+/* Mood tracker */
+.mood-tracker {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--card); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg); flex-wrap: wrap; gap: var(--space-md);
+}
+.mood-label { font-size: var(--font-size-sm); font-weight: 500; color: var(--text-secondary); }
+.mood-emojis { display: flex; gap: var(--space-sm); }
+.mood-btn {
+  width: 40px; height: 40px; border-radius: var(--radius-full);
+  border: 2px solid transparent; background: var(--background);
+  font-size: 22px; cursor: pointer; transition: all var(--transition-fast);
+}
+.mood-btn:hover { transform: scale(1.15); }
+.mood-btn.selected { border-color: var(--primary); background: var(--primary-bg); }
+
+/* Filter row */
+.filter-row { display: flex; gap: var(--space-md); margin-bottom: var(--space-lg); flex-wrap: wrap; }
+.tag-filter { max-width: 180px; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); }
+
+/* Inline tag pills on dashboard cards */
+.habit-tags-inline { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+
+/* Note icon (also shown on dashboard) */
+.note-icon { margin-left: 6px; cursor: help; opacity: 0.7; font-size: 13px; }
+
+/* Weekly progress bar */
+.weekly-progress {
+  margin-top: 8px; height: 6px; width: 100%;
+  background: var(--background); border-radius: var(--radius-full); overflow: hidden;
+}
+.weekly-progress-bar { height: 100%; transition: width 0.4s ease; border-radius: var(--radius-full); }
+.weekly-progress-text { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* Make today-habit a draggable column layout for new content */
+.today-habit { cursor: grab; }
+.today-habit:active { cursor: grabbing; }
