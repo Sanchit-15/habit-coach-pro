@@ -25,7 +25,7 @@ function currentWeekDates() {
 }
 
 export default function Dashboard() {
-  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood, useStreakFreeze, freezes } = useHabits();
+  const { habits, checkIn, undoCheckIn, reorderHabits, archiveHabit, moods, setTodayMood, applyStreakFreeze, freezes } = useHabits();
   const [missModal, setMissModal] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
@@ -282,7 +282,7 @@ export default function Dashboard() {
                   checkIn(missModal, 'missed', reason);
                   // Defer the freeze swap until after the miss has been written
                   setTimeout(() => {
-                    useStreakFreeze(missModal);
+                    applyStreakFreeze(missModal);
                     setMissModal(null);
                   }, 0);
                 }}

@@ -207,7 +207,7 @@ export function HabitProvider({ children }) {
     }
   };
 
-  const useStreakFreeze = (id) => {
+  const applyStreakFreeze = (id) => {
     if (freezes.count <= 0) return false;
     const today = new Date().toISOString().split('T')[0];
     setHabits(prev => prev.map(h => {
@@ -267,7 +267,7 @@ export function HabitProvider({ children }) {
     <HabitContext.Provider value={{
       habits, moods, soundEnabled, freezes, confettiActive,
       addHabit, updateHabit, deleteHabit,
-      checkIn, undoCheckIn, useStreakFreeze,
+      checkIn, undoCheckIn, applyStreakFreeze,
       archiveHabit, restoreHabit, reorderHabits,
       setTodayMood, replaceData, toggleSound,
       triggerConfetti, playDing,
