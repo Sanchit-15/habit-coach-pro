@@ -9,7 +9,6 @@ const navItems = [
   { path: '/analytics', label: 'Analytics', icon: '📈' },
   { path: '/reports', label: 'Reports', icon: '📋' },
   { path: '/insights', label: 'Insights', icon: '💡' },
-  { path: '/archive', label: 'Archive', icon: '📦' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -54,10 +53,6 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className="sidebar-user-email">{user?.email || ''}</div>
             </div>
           </div>
-          {/* Dark / light mode toggle (preference saved in localStorage) */}
-          <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle theme">
-            {theme === 'light' ? '🌙 Dark mode' : '☀️ Light mode'}
-          </button>
           <button className="logout-btn" onClick={handleLogout}>
             <span>🚪</span> Logout
           </button>

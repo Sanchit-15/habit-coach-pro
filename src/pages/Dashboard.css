@@ -266,17 +266,13 @@
   margin-top: var(--space-md);
 }
 
-/* Search + filter bar */
+/* Search bar */
 .search-bar-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
 .search-input {
-  flex: 1;
-  min-width: 220px;
+  width: 100%;
   max-width: 400px;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
@@ -287,19 +283,10 @@
   transition: border-color var(--transition-fast);
 }
 
-.filter-select {
-  min-width: 160px;
-}
-
 .search-input:focus {
   border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 3px var(--primary-bg);
-}
-
-/* Empty state on dashboard */
-.empty-state-card {
-  margin-bottom: var(--space-lg);
 }
 
 /* Highlight habits completed today with a green background */
@@ -311,137 +298,4 @@
 @media (max-width: 768px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ===== New: quote banner, mood check-in, drag handle, weekly progress ===== */
-
-/* Daily motivational quote banner at the top of the dashboard */
-.quote-banner {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
-  background: linear-gradient(135deg, var(--primary-bg), var(--card));
-  border-left: 4px solid var(--primary);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-lg);
-}
-
-.quote-banner-icon { font-size: 22px; }
-.quote-banner-text {
-  font-style: italic;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-}
-.quote-banner-author {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-/* Mood check-in row with emoji buttons */
-.mood-checkin {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-  flex-wrap: wrap;
-}
-
-.mood-checkin-label {
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-}
-
-.mood-options {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.mood-btn {
-  font-size: 24px;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  border: 2px solid var(--border-light);
-  background: var(--background);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.mood-btn:hover { transform: scale(1.1); }
-
-.mood-btn.selected {
-  border-color: var(--primary);
-  background: var(--primary-bg);
-  transform: scale(1.1);
-}
-
-/* Drag handle shown on the left of each habit card */
-.drag-handle {
-  color: var(--text-muted);
-  cursor: grab;
-  font-size: 14px;
-  user-select: none;
-  padding: 0 4px;
-}
-
-.drag-handle:active { cursor: grabbing; }
-
-/* Habit card while it is being dragged — handled implicitly by browser, but
-   we add a subtle hint when hovered as a drop target */
-.today-habit[draggable="true"] { transition: background var(--transition-fast); }
-
-/* Weekly goal progress bar */
-.weekly-progress {
-  position: relative;
-  height: 6px;
-  background: var(--border-light);
-  border-radius: var(--radius-full);
-  margin-top: 6px;
-  overflow: hidden;
-}
-
-.weekly-progress-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: var(--radius-full);
-  transition: width var(--transition-slow);
-}
-
-.weekly-progress-label {
-  position: absolute;
-  right: 4px;
-  top: -16px;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-/* Reuse pill styles defined in MyHabits.css; these duplicate-safe declarations
-   make tag pills available even when MyHabits.css isn't loaded on this page */
-.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag-pill {
-  display: inline-flex;
-  align-items: center;
-  font-size: var(--font-size-xs);
-  padding: 1px 8px;
-  border-radius: var(--radius-full);
-  background: var(--info-bg);
-  color: var(--info);
-  font-weight: 500;
-}
-.tag-pill.small { font-size: 10px; padding: 1px 6px; }
-
-.note-icon { margin-left: 6px; cursor: help; }
-
-/* Archive button on the dashboard reuses .check-btn sizing but with neutral styling */
-.check-btn.archive-btn {
-  background: var(--background);
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-.check-btn.archive-btn:hover {
-  background: var(--card-hover);
 }
