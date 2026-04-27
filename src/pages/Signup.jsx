@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import './Auth.css';
+// Backend helpers: API base URL + token storage in localStorage.
+import { API_URL, setToken } from '../utils/auth.js';
 
 export default function Signup() {
   // One state variable per form field.
@@ -18,9 +20,27 @@ export default function Signup() {
   // For redirecting after a successful signup.
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  // `async` because we call the backend with fetch() and `await` its response.
+  const handleSubmit = async (e) => {
     e.preventDefault();        // stop the default form reload
-    signup(name, email, password); // call our fake signup
+    // Try to register against the Express + MongoDB backend.
+    try {
+      // POST name + email + password as JSON to /api/auth/register.
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      // Parse the JSON body returned by the server.
+      const data = await res.json();
+      console.log('[signup] response', res.status, data);
+      // Persist the JWT for later authenticated requests.
+      if (res.ok && data.token) setToken(data.token);
+    } catch (err) {
+      // Backend down or unreachable — log and keep going with local context.
+      console.warn('[signup] backend unreachable, using local auth only:', err.message);
+    }
+    signup(name, email, password); // call our fake signup (unchanged local flow)
     navigate('/onboarding');   // send user to the welcome wizard
   };
 

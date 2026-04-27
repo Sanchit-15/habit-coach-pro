@@ -12,6 +12,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 // Shared styles used by both Login and Signup pages.
 import './Auth.css';
+// Backend helpers: API base URL + token storage in localStorage.
+import { API_URL, setToken } from '../utils/auth.js';
 
 export default function Login() {
   // One useState call per input field. The 1st value is the state, the
@@ -24,10 +26,30 @@ export default function Login() {
   const navigate = useNavigate();
 
   // Runs when the form is submitted (Enter key or button click).
-  const handleSubmit = (e) => {
+  // `async` because we call the backend with fetch() and `await` its response.
+  const handleSubmit = async (e) => {
     // Forms reload the page by default in browsers — stop that behavior.
     e.preventDefault();
-    // Call the (fake) login function from context.
+    // Try to log in against the Express + MongoDB backend.
+    // If the server isn't running we just fall back to the original local flow
+    // so the existing UI keeps working unchanged.
+    try {
+      // POST email + password as JSON to /api/auth/login.
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      // Parse the JSON body the server sent back.
+      const data = await res.json();
+      console.log('[login] response', res.status, data);
+      // If the server returned a token, persist it for later API calls.
+      if (res.ok && data.token) setToken(data.token);
+    } catch (err) {
+      // Network error (server down, CORS, etc.) — log and continue.
+      console.warn('[login] backend unreachable, using local auth only:', err.message);
+    }
+    // Keep the original local-context login so existing UI/flow is untouched.
     login(email, password);
     // Send the user to the onboarding wizard.
     navigate('/onboarding');
