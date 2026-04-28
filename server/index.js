@@ -15,6 +15,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 // Our authentication routes (register + login).
 import authRoutes from './routes/auth.js';
+// New protected route groups.
+import habitRoutes from './routes/habits.js';
+import completionRoutes from './routes/completions.js';
+import moodRoutes from './routes/moods.js';
+// Middleware that gates the protected routes behind a valid JWT.
+import protect from './middleware/protect.js';
 
 // Create the Express application instance.
 const app = express();
@@ -27,6 +33,11 @@ app.use(express.json());
 // Mount the auth router. Every route inside it will be prefixed with /api/auth.
 // Example: POST /api/auth/login  ->  routes/auth.js handles it.
 app.use('/api/auth', authRoutes);
+
+// Protected routes — `protect` runs first to verify JWT and set req.user.
+app.use('/api/habits', protect, habitRoutes);
+app.use('/api/completions', protect, completionRoutes);
+app.use('/api/moods', protect, moodRoutes);
 
 // Simple health check route so you can verify the server is up in a browser.
 app.get('/api/health', (req, res) => res.json({ ok: true }));
