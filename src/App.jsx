@@ -46,12 +46,10 @@ import GlobalConfetti from './components/GlobalConfetti.jsx';
 // ---------------------------------------------------------------------------
 function ProtectedRoute({ children }) {
   // useAuth() is a custom hook that returns auth data from AuthContext.
-  // We pull out the current `user` and whether they finished onboarding.
-  const { user, isOnboarded } = useAuth();
+  // We pull out the current `user`.
+  const { user } = useAuth();
   // No user logged in? Redirect to /login by rendering a <Navigate>.
   if (!user) return <Navigate to="/login" />;
-  // Logged in but hasn't gone through onboarding? Send them to /onboarding.
-  if (!isOnboarded) return <Navigate to="/onboarding" />;
   // Otherwise, render whatever was passed in (the protected page).
   return children;
 }
@@ -61,10 +59,10 @@ function ProtectedRoute({ children }) {
 // Sends logged-out users to /login, and already-onboarded users straight to /dashboard.
 // ---------------------------------------------------------------------------
 function OnboardingRoute({ children }) {
-  const { user, isOnboarded } = useAuth();
+  const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
-  if (isOnboarded) return <Navigate to="/dashboard" />;
-  return children;
+  // Onboarding is no longer used; redirect to dashboard instead.
+  return <Navigate to="/dashboard" />;
 }
 
 // ---------------------------------------------------------------------------

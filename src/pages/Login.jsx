@@ -20,40 +20,68 @@ export default function Login() {
   // 2nd is the function that updates it.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Pull the login() function out of the auth context.
-  const { login } = useAuth();
+  // Pull the login() function and completeOnboarding out of the auth context.
+  const { login, completeOnboarding } = useAuth();
   // navigate() lets us change the URL programmatically.
   const navigate = useNavigate();
 
   // Runs when the form is submitted (Enter key or button click).
-  // `async` because we call the backend with fetch() and `await` its response.
-  const handleSubmit = async (e) => {
-    // Forms reload the page by default in browsers — stop that behavior.
-    e.preventDefault();
-    // Try to log in against the Express + MongoDB backend.
-    // If the server isn't running we just fall back to the original local flow
-    // so the existing UI keeps working unchanged.
-    try {
-      // POST email + password as JSON to /api/auth/login.
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      // Parse the JSON body the server sent back.
-      const data = await res.json();
-      console.log('[login] response', res.status, data);
-      // If the server returned a token, persist it for later API calls.
-      if (res.ok && data.token) setToken(data.token);
-    } catch (err) {
-      // Network error (server down, CORS, etc.) — log and continue.
-      console.warn('[login] backend unreachable, using local auth only:', err.message);
+// `async` because we call the backend with fetch() and `await` its response.
+const handleSubmit = async (e) => {
+  // Prevent the browser from refreshing the page automatically.
+  e.preventDefault();
+
+  try {
+    // Send the login request to the backend API.
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      // HTTP method for sending data securely.
+      method: 'POST',
+
+      // Tell the backend we are sending JSON data.
+      headers: { 'Content-Type': 'application/json' },
+
+      // Convert the email + password object into JSON text.
+      body: JSON.stringify({ email, password }),
+    });
+
+    // Convert the backend response into a JavaScript object.
+    const data = await res.json();
+
+    // Print the backend response in the browser console for debugging.
+    console.log('[login] response', res.status, data);
+
+    // If login failed (wrong email/password), stop everything here.
+    if (!res.ok) {
+      // Show a friendly popup message to the user.
+      alert(data.message || 'Invalid email or password');
+
+      // Exit the function so fake login does NOT continue.
+      return;
     }
-    // Keep the original local-context login so existing UI/flow is untouched.
-    login(email, password);
-    // Send the user to the onboarding wizard.
-    navigate('/onboarding');
-  };
+
+    // If the backend sent a JWT token, save it in localStorage.
+    if (data.token) {
+      setToken(data.token);
+    }
+
+    // Update the frontend auth context with the logged-in user.
+    // Use the actual user name from the backend response.
+    login(data.user.email, data.user.name);
+
+    // Mark onboarding as complete so user can access protected pages.
+    completeOnboarding();
+
+    // Redirect the user to the habits page.
+    navigate('/habits');
+
+  } catch (err) {
+    // Runs if the backend server is unreachable or crashes.
+    console.warn('[login] backend unreachable:', err.message);
+
+    // Show a friendly error popup.
+    alert('Server error. Please try again.');
+  }
+};
 
   return (
     <div className="auth-page">

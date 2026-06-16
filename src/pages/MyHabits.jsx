@@ -6,12 +6,15 @@
 import { useState } from 'react';
 // Pull habit data + actions from the global habit context.
 import { useHabits } from '../context/HabitContext.jsx';
+import { useNavigate } from 'react-router-dom';
 import './MyHabits.css';
 
 // Preset accent colors the user can pick from for each habit.
 const COLOR_PRESETS = ['#E8553A', '#2F80ED', '#27AE60', '#F5A623', '#9B59B6', '#1ABC9C', '#E91E63', '#34495E'];
 
 export default function MyHabits() {
+  // For redirecting to archive page after archiving a habit.
+  const navigate = useNavigate();
   // Destructure exactly the actions we need.
   const { habits, addHabit, updateHabit, deleteHabit, archiveHabit } = useHabits();
   // Whether the create/edit modal is open.
@@ -204,7 +207,7 @@ export default function MyHabits() {
                 {/* Pencil opens the modal pre-filled with this habit. */}
                 <button className="icon-btn" onClick={() => handleEdit(habit)} title="Edit">✏️</button>
                 {/* Box archives the habit (moves it to the Archive page). */}
-                <button className="icon-btn" onClick={() => archiveHabit(habit.id)} title="Archive">📦</button>
+                <button className="icon-btn" onClick={() => { archiveHabit(habit.id); navigate('/archive'); }} title="Archive">📦</button>
                 {/* Trash removes the habit forever. */}
                 <button className="icon-btn delete" onClick={() => deleteHabit(habit.id)} title="Delete">🗑️</button>
               </div>

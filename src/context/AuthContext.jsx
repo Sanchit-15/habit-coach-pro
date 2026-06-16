@@ -1,4 +1,3 @@
-// ===========================================================================
 // AuthContext.jsx — The shared "box" that holds login info.
 //
 // Why use Context?
@@ -14,7 +13,9 @@
 //  - createContext: makes a new "box" for shared data.
 //  - useContext:    reads the data out of a box.
 //  - useState:      stores values that change over time inside a component.
-import { createContext, useContext, useState } from 'react';
+//  - useEffect:     runs side effects (like syncing with localStorage).
+import { createContext, useContext, useState, useEffect } from 'react';
+import { logout as clearToken } from '../utils/auth.js';
 
 // Create the empty Context box. The `null` is just the default value
 // used when no Provider is wrapping the app (we treat that as an error).
@@ -24,14 +25,45 @@ const AuthContext = createContext(null);
 // and renders its children inside. Anyone inside can use those values.
 export function AuthProvider({ children }) {
   // The currently logged-in user object, or null when nobody is logged in.
-  const [user, setUser] = useState(null);
+  // Initialize from localStorage so user stays logged in after refresh.
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('consistify_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   // Whether the user has finished the onboarding wizard.
-  const [isOnboarded, setIsOnboarded] = useState(false);
+  // Initialize from localStorage to persist across refresh.
+  const [isOnboarded, setIsOnboarded] = useState(() => {
+    try {
+      const saved = localStorage.getItem('consistify_onboarded');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+
+  // Whenever user changes, persist it to localStorage.
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('consistify_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('consistify_user');
+    }
+  }, [user]);
+
+  // Whenever onboarding status changes, persist it to localStorage.
+  useEffect(() => {
+    localStorage.setItem('consistify_onboarded', JSON.stringify(isOnboarded));
+  }, [isOnboarded]);
 
   // Fake login function. In a real app this would call an API.
-  // Here we just save an object with the email + a name derived from it.
-  const login = (email, password) => {
-    setUser({ email, name: email.split('@')[0] });
+  // Here we accept the name and email from the login response.
+  const login = (email, name) => {
+    setUser({ email, name });
   };
 
   // Fake signup function — same idea, but we accept the name explicitly.
@@ -41,6 +73,7 @@ export function AuthProvider({ children }) {
 
   // Clear the session and reset onboarding so the user starts fresh.
   const logout = () => {
+    clearToken(); // Also clear the JWT token from localStorage
     setUser(null);
     setIsOnboarded(false);
   };

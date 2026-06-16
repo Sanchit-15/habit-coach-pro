@@ -10,9 +10,9 @@ import './MyHabits.css';
 
 export default function Archive() {
   // Destructure exactly the bits of context we use.
-  const { habits, restoreHabit, deleteHabit } = useHabits();
-  // .filter() returns a NEW array containing only items where archived is true.
-  const archived = habits.filter(h => h.archived);
+  const { archivedHabits, restoreHabit, deleteHabit } = useHabits();
+  // archivedHabits already contains only archived habits from the backend.
+  const archived = archivedHabits;
 
   return (
     <div className="habits-page">

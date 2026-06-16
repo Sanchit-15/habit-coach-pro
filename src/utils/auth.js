@@ -24,4 +24,4 @@ export function logout() {
 // Base URL of the Express API. Configurable via Vite env var
 // (VITE_API_URL=http://localhost:5000 in a .env file at the project root).
 // Falls back to localhost:5000 for the typical local setup.
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';

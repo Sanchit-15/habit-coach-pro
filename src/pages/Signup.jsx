@@ -15,34 +15,66 @@ export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // signup() function from auth context.
-  const { signup } = useAuth();
+  // signup() function and completeOnboarding from auth context.
+  const { signup, completeOnboarding } = useAuth();
   // For redirecting after a successful signup.
   const navigate = useNavigate();
 
   // `async` because we call the backend with fetch() and `await` its response.
-  const handleSubmit = async (e) => {
-    e.preventDefault();        // stop the default form reload
-    // Try to register against the Express + MongoDB backend.
-    try {
-      // POST name + email + password as JSON to /api/auth/register.
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-      // Parse the JSON body returned by the server.
-      const data = await res.json();
-      console.log('[signup] response', res.status, data);
-      // Persist the JWT for later authenticated requests.
-      if (res.ok && data.token) setToken(data.token);
-    } catch (err) {
-      // Backend down or unreachable — log and keep going with local context.
-      console.warn('[signup] backend unreachable, using local auth only:', err.message);
+const handleSubmit = async (e) => {
+  // Prevent the browser from refreshing the page automatically.
+  e.preventDefault();
+
+  try {
+    // Send the signup request to the backend API.
+    const res = await fetch(`${API_URL}/api/auth/register`, {
+      // HTTP method used to create new data.
+      method: 'POST',
+
+      // Tell the backend we are sending JSON data.
+      headers: { 'Content-Type': 'application/json' },
+
+      // Convert form values into JSON text.
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    // Convert backend response into a JavaScript object.
+    const data = await res.json();
+
+    // Print backend response in the browser console.
+    console.log('[signup] response', res.status, data);
+
+    // If signup failed, stop everything here.
+    if (!res.ok) {
+      // Show backend error message.
+      alert(data.message || 'Signup failed');
+
+      // Prevent fake signup + redirect.
+      return;
     }
-    signup(name, email, password); // call our fake signup (unchanged local flow)
-    navigate('/onboarding');   // send user to the welcome wizard
-  };
+
+    // Save JWT token if backend sent one.
+    if (data.token) {
+      setToken(data.token);
+    }
+
+    // Update frontend auth context.
+    signup(name, email, password);
+
+    // Mark onboarding as complete so user can access protected pages.
+    completeOnboarding();
+
+    // Redirect to habits page.
+    navigate('/habits');
+
+  } catch (err) {
+    // Runs if backend server is offline or unreachable.
+    console.warn('[signup] backend unreachable:', err.message);
+
+    // Show friendly error popup.
+    alert('Server error. Please try again.');
+  }
+};
 
   return (
     <div className="auth-page">
