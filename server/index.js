@@ -26,7 +26,9 @@ import protect from './middleware/protect.js';
 const app = express();
 
 // Middleware: allow cross-origin requests from any origin (dev convenience).
-app.use(cors({ origin: 'https://habit-coach-pro.vercel.app' }));
+app.use(cors({
+  origin: ['https://habit-coach-pro.vercel.app', 'http://localhost:5173', 'http://localhost:8080'],
+}));
 // Middleware: parse incoming JSON request bodies into req.body.
 app.use(express.json());
 
