@@ -420,9 +420,18 @@
   color: var(--text-muted);
 }
 
+.home-page .hero.container {
+  padding-top: 80px;
+
+}
+
 @media (max-width: 768px) {
   .hero h1 { font-size: var(--font-size-3xl); }
   .hero-mockup-img { grid-template-columns: 1fr; }
   .home-nav-links { display: none; }
   .footer-content { flex-direction: column; gap: var(--space-md); }
-}
+  .home-page .hero.container {
+    padding-top: 120px;
+  }  
+}  
+
